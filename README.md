@@ -263,7 +263,7 @@ Automatically retrieves GPS coordinates from image metadata for precise geolocat
 ---
 
 ## 📝 Citation & Attribution
-**GreenWatch v3.9.2** — Hack For Green Bharat National Competition Submission
+**Satellite-Digital-Twin v3.9.2** — Hack For Green Bharat National Competition Submission
 
 *Building the Digital Twin of a Clean, Waste-Free India through AI-Powered Satellite Intelligence* 🛰️🌿
 
