@@ -606,33 +606,45 @@ def main():
             "<p class='section-header'>Dumping Analysis & Risk Factors</p>",
             unsafe_allow_html=True
         )
-        # ───
+
+        # ─────────────────────────────────────────
+        # Global Threshold (Single Source of Truth)
+        # ─────────────────────────────────────────
+        if "risk_threshold" not in st.session_state:
+            st.session_state["risk_threshold"] = 0.50
+
+        st.markdown("### 🎚️ Unified Risk Threshold")
+
+        threshold = st.slider(
+            "Dump Detection Confidence Threshold",
+            min_value=0.10,
+            max_value=0.90,
+            value=st.session_state["risk_threshold"],
+            step=0.05
+        )
+        st.session_state["risk_threshold"] = threshold
+
+        st.info(f"All AI decisions use a confidence threshold of **{threshold:.0%}**")
+
+        st.divider()
+
+        # ─────────────────────────────────────────
+        # Layout Columns
+        # ─────────────────────────────────────────
+        left_col, right_col = st.columns([1, 1], gap="large")
+
+        # ─────────────────────────────────────────
         # Image Input
         # ─────────────────────────────────────────
-        c1, c2 = st.columns([1, 1], gap="large")
-        
-        with c1:
-            if "risk_threshold" not in st.session_state:
-                st.session_state["risk_threshold"] = 0.50
-
-            st.markdown("### 🎚️ Unified Risk Threshold")
-            threshold = st.slider(
-                "Dump Detection Confidence Threshold",
-                0.10, 0.90,
-                st.session_state["risk_threshold"],
-                0.05
-            )
-            st.session_state["risk_threshold"] = threshold
-
-            st.info(f"All AI decisions use a confidence threshold of **{threshold:.0%}**")
-
-        with c2:
+        with left_col:
             st.markdown("### 🛰️ Satellite Image Input")
+
             uploaded = st.file_uploader(
                 "Upload satellite image",
                 type=["png", "jpg", "jpeg", "tif"],
                 key="merged_upload"
             )
+
             analyze = st.button("Run Dumping Analysis")
 
         # ─────────────────────────────────────────
@@ -659,7 +671,6 @@ def main():
             severity = compute_severity_score(prob, coverage, area_ha)
             impact   = estimate_environmental_impact(coverage, area_ha)
 
-            # Cache
             st.session_state["results_cache"] = {
                 "img": img_np,
                 "overlay": overlay,
@@ -687,22 +698,72 @@ def main():
         # ─────────────────────────────────────────
         if st.session_state.get("results_cache"):
             res = st.session_state["results_cache"]
+            prob = res["prob"]
+            is_dump = res["is_dump"]
 
-            with c1:
-                st.image(res["img"], caption="Input Image", use_container_width=True)
+            with left_col:
+                st.image(res["img"], caption="Input Satellite Image", use_container_width=True)
+                if res["lat"]:
+                    st.caption(f"📍 GPS: {res['lat']:.5f}N, {res['lon']:.5f}E")
 
-            with c2:
+            with right_col:
                 if res["overlay"] is not None:
-                    st.image(res["overlay"], caption="AI Dump Footprint", use_container_width=True)
+                    st.image(res["overlay"], caption="AI-Detected Dump Footprint", use_container_width=True)
 
                 st.markdown(
                     f"""
-                    **Dump Probability:** `{res['prob']:.1%}`  
+                    **Confidence:** `{prob:.1%}`  
                     **Coverage:** `{res['coverage']:.2f}%`  
-                    **Severity:** `{res['severity']['level']}`  
+                    **Severity:** `{res['severity']['level']}`
                     """
                 )
 
+                # ── Dynamic Probability Bar ──
+                st.markdown("#### 📊 Dump Probability")
+
+                fig, ax = plt.subplots(figsize=(5.5, 1.6))
+                fig.patch.set_facecolor("#0b1730")
+                ax.set_facecolor("#0b1730")
+
+                ax.barh(
+                    ["AI Confidence"],
+                    [prob],
+                    color="#ef4444" if prob >= threshold else "#10b981",
+                    height=0.5,
+                )
+                ax.barh(
+                    ["AI Confidence"],
+                    [1 - prob],
+                    left=[prob],
+                    color="#1f2937",
+                    height=0.5,
+                )
+
+                ax.axvline(
+                    threshold,
+                    color="white",
+                    linestyle="--",
+                    linewidth=1.6,
+                    label=f"Threshold ({threshold:.0%})",
+                )
+
+                ax.set_xlim(0, 1)
+                ax.set_xlabel("Probability", color="#9ca3af")
+                ax.set_yticks([])
+                ax.tick_params(colors="#9ca3af")
+                for spine in ax.spines.values():
+                    spine.set_color("#1f2937")
+
+                ax.legend(
+                    fontsize=8,
+                    labelcolor="white",
+                    facecolor="#0b1730",
+                    loc="lower right",
+                )
+
+                st.pyplot(fig, use_container_width=True)
+
+            # ── Severity Banner ──
             sc = res["severity"]["color"]
             st.markdown(
                 f"""
@@ -715,9 +776,12 @@ def main():
                 unsafe_allow_html=True
             )
 
-            st.markdown("### 🌍 Environmental Impact")
-            i1, i2, i3, i4 = st.columns(4)
+            # ─────────────────────────────────────────
+            # Environmental Impact
+            # ─────────────────────────────────────────
+            st.markdown("<p class='section-header'>Environmental Impact</p>", unsafe_allow_html=True)
 
+            i1, i2, i3, i4 = st.columns(4)
             for col, label, value in [
                 (i1, "🗑️ Waste", f"{res['impact']['tonnes_waste']} t"),
                 (i2, "🌫️ CO₂", f"{res['impact']['CO2_tonnes']} t"),
@@ -730,6 +794,9 @@ def main():
                         unsafe_allow_html=True
                     )
 
+            # ─────────────────────────────────────────
+            # PDF Report
+            # ─────────────────────────────────────────
             if FPDF_OK:
                 pdf = generate_pdf_report(
                     res["filename"],
