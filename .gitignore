@@ -1,0 +1,41 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Data — never commit raw data to git (too large, ~4 GB)
+data/raw/
+data/processed/
+
+# Model weights — large binaries (use Git LFS or share via Drive)
+outputs/checkpoints/*.pt
+outputs/checkpoints/*.pth
+
+# Generated plots & CSVs — reproducible by running scripts
+outputs/checkpoints/*.png
+outputs/checkpoints/*.csv
+outputs/checkpoints/evaluation/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Conda / virtual env
+.conda/
+env/
+venv/
+
+# Editor files
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Hugging Face / torch cache (downloaded automatically)
+.cache/
+
+# Streamlit secrets (never commit API keys)
+.streamlit/secrets.toml
