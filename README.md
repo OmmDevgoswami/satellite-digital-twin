@@ -1,6 +1,8 @@
-# Telemetry-AI: Real-Time Environmental Intelligence Platform (v3.9.2)
+# Satellite-Digital-Twin: Real-Time Environmental Intelligence Platform (v3.9.2)
 
-**Telemetry-AI** is a real-time satellite telemetry platform designed for environmental intelligence and waste infrastructure monitoring. Built for the Hack For Green Bharat competition, it combines deep learning with the Pathway streaming framework to provide a production-grade digital twin and ESG impact analysis.
+**Satellite-Digital-Twin** is a production-grade satellite telemetry platform for environmental intelligence. AI-powered waste-dump detection with a multi-model ensemble, geospatial analytics and ESG impact quantification. It combines an EfficientNet-B4 classifier with a 3-model segmentation ensemble, streams incoming imagery via the Pathway framework, and produces GIS-mapped ESG impact metrics. The codebase includes a Glassmorphic Streamlit UI, multi-language support, and a Dockerfile/`vercel.json` for easy deployment.
+
+> Built as the Hack For Green Bharat submission; extendable to any telemetry use-case.
 
 ---
 
